@@ -17,13 +17,20 @@ class ApplicationController < Sinatra::Base
   end
 
   post "/signup" do
-    #your code here
-
+    if params[:username].empty? || params[:password].empty?
+      redirect '/failure'
+    else
+      user = User.create(username: params[:username], password_digest: params[:password])
+      user.save
+      redirect '/login'
+    end
   end
 
   get '/account' do
-    @user = User.find(session[:user_id])
-    erb :account
+    @user = current_user
+    if logged_in?
+      erb :account
+    end
   end
 
 
@@ -32,7 +39,17 @@ class ApplicationController < Sinatra::Base
   end
 
   post "/login" do
-    ##your code here
+    if params[:username].empty? || params[:password].empty?
+      redirect '/failure'
+    else
+      @user = User.find_by(username: params[:username])
+      if @user
+        session[:user_id] = @user.id
+        redirect '/account'
+      else
+        redirect '/failure'
+      end
+    end
   end
 
   get "/failure" do
